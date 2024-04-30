@@ -2,22 +2,50 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
 
 
-# Generate 100 random normal points for x
-x = np.arange(1, 101)
+def SimulateBreak():
+    # Generate 100 random normal points for x
+    x = np.arange(1, 101)
+    # Generate random error terms with small standard deviation
+    epsilon = np.random.normal(0, 0.25, 100)
+    # Create corresponding y values for the first segment
+    y1 = -1 + 0.5 * x + np.random.normal(0, 0.25, 100)
+    # Create corresponding y values for the second segment
+    y2 = 3 + 0.2 * x + np.random.normal(0, 0.25, 100)
+    # Combine both segments
+    y = np.concatenate([y1[:50], y2[50:]])
+    return x,y
 
-# Generate random error terms with small standard deviation
-epsilon = np.random.normal(0, 0.25, 100)
+def SimulateLinear():
+    # Set a seed for reproducibility
+    np.random.seed(0)
 
-# Create corresponding y values for the first segment
-y1 = -1 + 0.5 * x + np.random.normal(0, 0.25, 100)
+    # Generate 25 sequential points for x
+    x = np.arange(1, 26)
 
-# Create corresponding y values for the second segment
-y2 = 3 + 0.2 * x + np.random.normal(0, 0.25, 100)
+    # Generate corresponding y values with a linear relationship to x
+    # Let's assume the relationship is y = 2x + 3
+    # We add more random noise to y to make the data noisier
+    y = 2 * x + 3 + np.random.normal(0, 20, 25)  # Increased standard deviation for more noise
+    return x,y
 
-# Combine both segments
-y = np.concatenate([y1[:50], y2[50:]])
+
+def SimulateQuadratic():
+    # Set a seed for reproducibility
+    np.random.seed(0)
+
+    # Generate 25 sequential points for x
+    x = np.arange(1, 26)
+
+    # Generate corresponding y values with a quadratic relationship to x
+    # Let's assume the relationship is y = 2x^2 + 3x + 4
+    # We add more random noise to y to make the data noisier
+    y = 2 * x**2 + 3 * x + 4 + np.random.normal(0, 20, 25) 
+
+    return(x,y)
+
 
 def reshape(x, y):
     x = x.reshape(-1, 1)
@@ -56,8 +84,30 @@ def segment(x, y):
 
     return best_segment_1, best_segment_2, best_BIC
 
+x,y = SimulateQuadratic()
+
 segment1, segment2, lowest_BIC = segment(x, y)
 x, y = reshape(x, y)
+
+# Calculate BIC for linear model
+x, y = reshape(x, y)
+RSS_linear, predicted_y_linear, _ = linear_regression(x, y)
+BIC_linear = calculate_BIC(RSS_linear, len(x), 1)  # k = 1 for a linear model
+
+# Calculate BIC for quadratic model
+poly = PolynomialFeatures(degree=2)
+x_poly = poly.fit_transform(x)
+RSS_quad, predicted_y_quad, _ = linear_regression(x_poly, y)
+BIC_quad = calculate_BIC(RSS_quad, len(x), 2)  # k = 2 for a quadratic model
+
+# Compare BICs
+print(f"BIC for Two Line model: {lowest_BIC}")
+print(f"BIC for linear model: {BIC_linear}")
+print(f"BIC for quadratic model: {BIC_quad}")
+
+BIC_values = {"Linear Model": BIC_linear, "Quadratic Model": BIC_quad, "Segmented Regression": lowest_BIC}
+min_BIC_model = min(BIC_values, key=BIC_values.get)
+print(f"The model with the lowest BIC is the {min_BIC_model}.")
 
 # Create a scatterplot of the original data
 plt.scatter(x, y, label="Original Data", color="blue")
@@ -68,6 +118,12 @@ segment_2_x, segment_2_predicted_y, model_2 = segment2
 
 plt.plot(segment_1_x, segment_1_predicted_y, label="Segment 1", color="red")
 plt.plot(segment_2_x, segment_2_predicted_y, label="Segment 2", color="green")
+
+# Plot the regression line for the linear model
+plt.plot(x, predicted_y_linear, label="Linear Model", color="purple")
+
+# Plot the regression line for the quadratic model
+plt.plot(x, predicted_y_quad, label="Quadratic Model", color="orange")
 
 plt.xlabel("X")
 plt.ylabel("Y")
