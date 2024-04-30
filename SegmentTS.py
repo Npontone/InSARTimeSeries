@@ -6,6 +6,13 @@ from sklearn.preprocessing import PolynomialFeatures
 from scipy import stats
 
 def SimulateBreak():
+
+    '''
+    Creates a simulated time-series where there are two linear trend seperated
+    by a break.
+
+    '''
+
     # Generate 100 random normal points for x
     x = np.arange(1, 101)
     # Generate random error terms with small standard deviation
@@ -19,8 +26,11 @@ def SimulateBreak():
     return x,y
 
 def SimulateLinear():
-    # Set a seed for reproducibility
-    np.random.seed(0)
+
+    '''
+    Creates a simulated time-series with a positive linear trend
+    '''
+
 
     # Generate 25 sequential points for x
     x = np.arange(1, 101)
@@ -33,19 +43,21 @@ def SimulateLinear():
 
 
 def SimulateQuadratic():
-    # Set a seed for reproducibility
-    np.random.seed(0)
 
-    # Generate 25 sequential points for x
+    '''
+    Creates a simulated time-series with a quadratic relationship
+    y = 2x^2 + 3x + 4.
+
+    Args:
+
+    Returns:
+        Two 1D arrays (x,y)
+        
+    '''
     x = np.arange(1, 26)
-
-    # Generate corresponding y values with a quadratic relationship to x
-    # Let's assume the relationship is y = 2x^2 + 3x + 4
-    # We add more random noise to y to make the data noisier
     y = 2 * x**2 + 3 * x + 4 + np.random.normal(0, 20, 25) 
 
-    return(x,y)
-
+    return x,y    
 
 def reshape(x, y):
     x = x.reshape(-1, 1)
@@ -98,15 +110,12 @@ def segment(x, y):
 
     return best_segment_1, best_segment_2, best_BIC
 
-#################################################################################
 
 x,y = SimulateLinear()
-
 segment1, segment2, lowest_BIC = segment(x, y)
 x, y = reshape(x, y)
 
 # Calculate BIC for linear model
-x, y = reshape(x, y)
 RSS_linear, predicted_y_linear, _ = linear_regression(x, y)
 BIC_linear = calculate_BIC(RSS_linear, len(x), 1)  # k = 1 for a linear model
 
@@ -157,7 +166,6 @@ if overlap_range:
     print("95% CI Overlap")
 else:
     print("No 95% CI overlap")
-
 
 # Check if the confidence intervals overlap
 #overlap = np.max([np.max(lower_1), np.max(lower_2)]) < np.min([np.min(upper_1), np.min(upper_2)])
