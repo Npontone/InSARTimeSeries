@@ -3,6 +3,7 @@ import numpy as np
 import math
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
+from scipy import stats
 
 
 def SimulateBreak():
@@ -11,9 +12,9 @@ def SimulateBreak():
     # Generate random error terms with small standard deviation
     epsilon = np.random.normal(0, 0.25, 100)
     # Create corresponding y values for the first segment
-    y1 = -1 + 0.5 * x + np.random.normal(0, 0.25, 100)
+    y1 = -1 + 0.5 * x + np.random.normal(0, 2, 100)
     # Create corresponding y values for the second segment
-    y2 = 3 + 0.2 * x + np.random.normal(0, 0.25, 100)
+    y2 = 3 + 0.2 * x + np.random.normal(0, 2, 100)
     # Combine both segments
     y = np.concatenate([y1[:50], y2[50:]])
     return x,y
@@ -65,6 +66,20 @@ def calculate_BIC(RSS, n, k):
     BIC_value = term1 + term2
     return BIC_value
 
+def confidence_interval(x, y, model):
+    # Predict y values for given x
+    predicted_y = model.predict(x)
+    # Calculate the residuals
+    residuals = y - predicted_y
+    # Calculate the mean squared error
+    mse = np.sum((residuals)**2) / (len(x) - 2)
+    # Calculate the standard error
+    se = np.sqrt(mse)
+    # Calculate the confidence interval
+    interval = 1.96 * se
+    return predicted_y - interval, predicted_y + interval
+
+
 def segment(x, y):
     best_BIC = float('inf')
     best_segment_1 = (x, y)  # Initialize with entire dataset
@@ -84,7 +99,9 @@ def segment(x, y):
 
     return best_segment_1, best_segment_2, best_BIC
 
-x,y = SimulateQuadratic()
+#################################################################################
+
+x,y = SimulateBreak()
 
 segment1, segment2, lowest_BIC = segment(x, y)
 x, y = reshape(x, y)
@@ -116,6 +133,37 @@ plt.scatter(x, y, label="Original Data", color="blue")
 segment_1_x, segment_1_predicted_y, model_1 = segment1
 segment_2_x, segment_2_predicted_y, model_2 = segment2
 
+# Calculate the confidence intervals for both segments
+lower_1, upper_1 = confidence_interval(segment_1_x, y[:len(segment_1_x)], model_1)
+lower_2, upper_2 = confidence_interval(segment_2_x, y[len(segment_1_x):], model_2)
+
+
+def find_overlap_float(x, y):
+    # Calculate the overlap range
+    overlap_start = max(x[0], y[0])
+    overlap_end = min(x[1], y[1])
+    
+    # Check if there's an actual overlap
+    if overlap_start <= overlap_end:
+        return (overlap_start, overlap_end)
+    else:
+        return None
+    
+set1 = (lower_1[-1], upper_1[-1])  # First set of points (vertical positions)
+set2 = (lower_2[0], upper_2[0])  # Second set of points (vertical positions)
+
+overlap_range = find_overlap_float(set1, set2)
+
+if overlap_range:
+    print("95% CI Overlap")
+else:
+    print("No 95% CI overlap")
+
+
+# Check if the confidence intervals overlap
+#overlap = np.max([np.max(lower_1), np.max(lower_2)]) < np.min([np.min(upper_1), np.min(upper_2)])
+#print(f"Do the confidence intervals overlap? {overlap}")
+
 plt.plot(segment_1_x, segment_1_predicted_y, label="Segment 1", color="red")
 plt.plot(segment_2_x, segment_2_predicted_y, label="Segment 2", color="green")
 
@@ -125,9 +173,18 @@ plt.plot(x, predicted_y_linear, label="Linear Model", color="purple")
 # Plot the regression line for the quadratic model
 plt.plot(x, predicted_y_quad, label="Quadratic Model", color="orange")
 
+# Add the confidence intervals to the plot
+plt.fill_between(segment_1_x.flatten(), lower_1.flatten(), upper_1.flatten(), color='red', alpha=0.1, label="Confidence Interval 1")
+plt.fill_between(segment_2_x.flatten(), lower_2.flatten(), upper_2.flatten(), color='green', alpha=0.1, label="Confidence Interval 2")
+
+
 plt.xlabel("X")
 plt.ylabel("Y")
 plt.title("Segmented Regression with Breakpoint (Minimum 5 Points per Segment)")
 plt.legend()
 plt.grid(True)
 plt.show()
+
+
+
+
