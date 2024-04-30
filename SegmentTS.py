@@ -5,7 +5,6 @@ from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 from scipy import stats
 
-
 def SimulateBreak():
     # Generate 100 random normal points for x
     x = np.arange(1, 101)
@@ -24,12 +23,12 @@ def SimulateLinear():
     np.random.seed(0)
 
     # Generate 25 sequential points for x
-    x = np.arange(1, 26)
+    x = np.arange(1, 101)
 
     # Generate corresponding y values with a linear relationship to x
     # Let's assume the relationship is y = 2x + 3
     # We add more random noise to y to make the data noisier
-    y = 2 * x + 3 + np.random.normal(0, 20, 25)  # Increased standard deviation for more noise
+    y = 2 * x + 3 + np.random.normal(0, 2, 100)  # Increased standard deviation for more noise
     return x,y
 
 
@@ -101,7 +100,7 @@ def segment(x, y):
 
 #################################################################################
 
-x,y = SimulateBreak()
+x,y = SimulateLinear()
 
 segment1, segment2, lowest_BIC = segment(x, y)
 x, y = reshape(x, y)
@@ -176,7 +175,6 @@ plt.plot(x, predicted_y_quad, label="Quadratic Model", color="orange")
 # Add the confidence intervals to the plot
 plt.fill_between(segment_1_x.flatten(), lower_1.flatten(), upper_1.flatten(), color='red', alpha=0.1, label="Confidence Interval 1")
 plt.fill_between(segment_2_x.flatten(), lower_2.flatten(), upper_2.flatten(), color='green', alpha=0.1, label="Confidence Interval 2")
-
 
 plt.xlabel("X")
 plt.ylabel("Y")
