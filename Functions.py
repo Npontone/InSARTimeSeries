@@ -12,7 +12,7 @@ def SimulateBreak():
     by a break.
 
     '''
-    
+
     # Generate 100 random normal points for x
     x = np.arange(1, 101)
     # Generate random error terms with small standard deviation
@@ -30,7 +30,6 @@ def SimulateLinear():
     '''
     Creates a simulated time-series with a positive linear trend
     '''
-
 
     # Generate 25 sequential points for x
     x = np.arange(1, 101)
@@ -93,6 +92,13 @@ def confidence_interval(x, y, model):
 
 def segment(x, y):
 
+    '''
+    Iteratively fit a split line regression on either side of a moving breakpoint. 
+    For each iteration it will calculate BIC using the sum of RSS for both lines. Returns 
+    the segments with the lowest BIC, which should be the optimal fit.
+    
+    '''
+
     best_BIC = float('inf')
     best_segment_1 = (x, y)  
     best_segment_2 = (x, y)
@@ -131,6 +137,15 @@ def find_overlap_float(x, y):
     else:
         return None
     
+
+
+def CompareBIC():
+    '''
+    This function will compare a segmented linear, linear, and quadric model fit to the same time
+    series. The most appropriate fit is determined by the model which has the lowest BIC.
+
+
+    '''
 
     
 
