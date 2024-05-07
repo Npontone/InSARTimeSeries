@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Description: Automated classification of ISBAS time-series based on reading a
-stack of raster data
-Author: David Gee (david.gee@terramotion.co.uk)
-
-"""
-
 import numpy as np
 from osgeo import gdal
 import glob
@@ -20,7 +12,7 @@ from scipy.fftpack import fft
 
 import Functions
 
-wdir = r'E:\YURI-PUNNET\Yellow_KnifeClassification'
+wdir = r'C:\Users\Nicho\Documents\GeoDynamics'
 wdir = wdir + "/"
 
 #Import linear velocities
@@ -42,7 +34,7 @@ data_cube = data_cube * 1000
 #Get dates from file names
 dates = []
 serial = []
-print("Derriving image dates")
+
 for j in tiffs:
     date_part = j[len(wdir): len(wdir) + 8] 
     date_part = datetime.strptime(date_part, '%Y%m%d')
@@ -51,6 +43,7 @@ for j in tiffs:
     numbers = numbers / 24 / 60 / 60
     numbers = int(numbers)
     serial.append(numbers)
+
 print("Done")
 
 #Get dimensions of data cube
@@ -70,11 +63,30 @@ geot = orig_ras.GetGeoTransform() #Transformation info from orig raster
 proj = orig_ras.GetProjection() #Projection info from orig raster
 driver_tiff = gdal.GetDriverByName("GTiff")
 
+
+
+#This takes a long time to run, I think there are many optimizations to be done, probably with the
+#for loops.
+
 New_Raster = np.zeros_like(data_cube[0])
 for row in np.arange(rows):
-    print("Calculating Anderson Darling value for array: Row " + str(row) + " out of " + str(rows))
     for col in np.arange(cols):
-        New_Raster[row, col] = Resultgoeshere
+        time_series = data_cube[:, row, col]        
+        if not np.isnan(np.sum(time_series)):
+            New_Raster[row, col] = Functions.CompareBIC(np.array(serial),time_series)
+        else:
+            New_Raster[row,col] = np.nan
+        #print(New_Raster[row,col])
+
+new_ras = wdir + "classified.tif" #The new raster
+new_tiff = driver_tiff.Create(New_Raster, xsize=orig_ras.RasterXSize, ysize=orig_ras.RasterYSize, 
+                              bands=1, eType=gdal.GDT_Float32)
+new_tiff.GetRasterBand(1).WriteArray(New_Raster) #Put array you want to write here
+new_tiff.GetRasterBand(1).SetNoDataValue(-999) #Set no data value
+new_tiff.SetGeoTransform(geot) #Set Geotransfrom
+new_tiff.SetProjection(proj) #Set Projection
+new_tiff = None #close file
+
 
 
 

@@ -139,15 +139,28 @@ def find_overlap_float(x, y):
     
 
 
-def CompareBIC():
+def CompareBIC(x,y):
+
     '''
     This function will compare a segmented linear, linear, and quadric model fit to the same time
     series. The most appropriate fit is determined by the model which has the lowest BIC.
 
-
     '''
+    segment1, segment2, lowest_BIC = segment(x, y)
 
-    
+    # Calculate BIC for linear model
+    x, y = reshape(x, y)
+    RSS_linear, predicted_y_linear, _ = linear_regression(x, y)
+    BIC_linear = calculate_BIC(RSS_linear, len(x), 1)  # k = 1 for a linear model
 
+    # Calculate BIC for quadratic model
+    poly = PolynomialFeatures(degree=2)
+    x_poly = poly.fit_transform(x)
+    RSS_quad, predicted_y_quad, _ = linear_regression(x_poly, y)
+    BIC_quad = calculate_BIC(RSS_quad, len(x), 2)  # k = 2 for a quadratic model
 
+    # 1 = linear regression, 2 = quadratic regression, 3 = segmented regression
+    BIC_values = {1: BIC_linear, 2: BIC_quad, 3: lowest_BIC}
+    min_BIC_model = min(BIC_values, key=BIC_values.get)
 
+    return(min_BIC_model)
