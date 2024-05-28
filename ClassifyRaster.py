@@ -65,18 +65,25 @@ driver_tiff = gdal.GetDriverByName("GTiff")
 
 
 
-#This takes a long time to run, I think there are many optimizations to be done, probably with the
-#for loops.
+#This takes a long time to run, unfortunate :(
 
 New_Raster = np.zeros_like(data_cube[0])
 for row in np.arange(rows):
     for col in np.arange(cols):
         time_series = data_cube[:, row, col]        
         if not np.isnan(np.sum(time_series)):
-            New_Raster[row, col] = Functions.CompareBIC(np.array(serial),time_series)
+            print("Valid")
+
+            #Check if its linear
+
+            #Check for breakpoint
+
+            #Check if its quadraic (ANOVA F-test)
+
         else:
             New_Raster[row,col] = np.nan
-        #print(New_Raster[row,col])
+        
+        print(New_Raster[row,col])
 
 new_ras = wdir + "classified.tif" #The new raster
 new_tiff = driver_tiff.Create(New_Raster, xsize=orig_ras.RasterXSize, ysize=orig_ras.RasterYSize, 

@@ -2,18 +2,20 @@ import Functions
 import matplotlib.pyplot as plt
 
 
-x,y = Functions.SimulateLinear()
+x,y = Functions.SimulateBreak()
 segment1, segment2, lowest_BIC = Functions.segment(x, y)
+
 x, y = Functions.reshape(x, y)
 
 # Calculate BIC for linear model
-RSS_linear, predicted_y_linear, _ = Functions.linear_regression(x, y)
+RSS_linear, predicted_y_linear, linear_residuals, error_linear, f_linear = Functions.linear_regression2(x, y)
 BIC_linear = Functions.calculate_BIC(RSS_linear, len(x), 1)  # k = 1 for a linear model
 
 # Calculate BIC for quadratic model
+
 poly = Functions.PolynomialFeatures(degree=2)
 x_poly = poly.fit_transform(x)
-RSS_quad, predicted_y_quad, _ = Functions.linear_regression(x_poly, y)
+RSS_quad, predicted_y_quad, quad_residuals, error_quad, f_quad = Functions.linear_regression2(x_poly, y)
 BIC_quad = Functions.calculate_BIC(RSS_quad, len(x), 2)  # k = 2 for a quadratic model
 
 # Compare BICs
@@ -21,9 +23,29 @@ print(f"BIC for Two Line model: {lowest_BIC}")
 print(f"BIC for linear model: {BIC_linear}")
 print(f"BIC for quadratic model: {BIC_quad}")
 
+bic_values = [lowest_BIC,BIC_linear,BIC_quad]
+
 BIC_values = {"Linear Model": BIC_linear, "Quadratic Model": BIC_quad, "Segmented Regression": lowest_BIC}
 min_BIC_model = min(BIC_values, key=BIC_values.get)
 print(f"The model with the lowest BIC is the {min_BIC_model}.")
+
+# Calculate weights and evidence ratio
+results = Functions.calculate_weights_and_evidence_ratio(bic_values)
+
+bw = results['evidence_ratio']
+bth = 1
+
+if bw >= bth:
+    print('Significant Breakpoint')
+
+elif bw < bth:
+    print('No significant Breakpoint')
+
+
+print("Segmented Regression Weight:", results['segmented_weight'])
+print("Linear Regression Weight:", results['linear_weight'])
+print("Quadratic Regression Weight:", results['quadratic_weight'])
+print("Evidence Ratio (Bw):", results['evidence_ratio'])
 
 # Create a scatterplot of the original data
 plt.scatter(x, y, label="Original Data", color="blue")
