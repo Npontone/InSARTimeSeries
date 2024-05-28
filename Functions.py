@@ -10,10 +10,14 @@ import pandas as pd
 
 def SimulateBreak():
 
-    '''
-    Creates a simulated time-series where there are two linear trend seperated
+    """
+    Creates a simulated time-series where there are two linear trends separated
     by a break.
-    '''
+
+    Returns:
+        x (numpy.ndarray): An array of x-values.
+        y (numpy.ndarray): An array of corresponding y-values for the combined segments.
+    """
 
     # Generate 100 random normal points for x
     x = np.arange(1, 101)
@@ -29,9 +33,14 @@ def SimulateBreak():
 
 def SimulateLinear():
 
-    '''
+    """
     Creates a simulated time-series with a positive linear trend
-    '''
+
+    Returns:
+        x (numpy.ndarray): An array of x-values.
+        y (numpy.ndarray): An array of corresponding y-values for the combined segments.
+
+    """"
 
     # Generate 25 sequential points for x
     x = np.arange(1, 101)
@@ -45,16 +54,14 @@ def SimulateLinear():
 
 def SimulateQuadratic():
 
-    '''
-    Creates a simulated time-series with a quadratic relationship
-    y = 2x^2 + 3x + 4.
-
-    Args:
+    """
+    Creates a simulated time-series with a quadratic relationship y = 2x^2 + 3x + 4.
 
     Returns:
-        Two 1D arrays (x,y)
-        
-    '''
+        x (numpy.ndarray): An array of x-values.
+        y (numpy.ndarray): An array of corresponding y-values.
+
+    """
     x = np.arange(1, 26)
     y = 2 * x**2 + 3 * x + 4 + np.random.normal(0, 20, 25) 
 
@@ -66,6 +73,9 @@ def reshape(x, y):
     return x, y
 
 def linear_regression(x, y):
+    """
+    Replace by linear_regression2, but keeping it around just in case.
+    """
     model = LinearRegression().fit(x, y)
     predicted_y = model.predict(x)
     error = y - predicted_y
@@ -74,6 +84,7 @@ def linear_regression(x, y):
 
 
 def linear_regression2(x, y):
+
     """
     Perform a linear regression using Ordinary Least Squares (OLS).
 
@@ -84,6 +95,7 @@ def linear_regression2(x, y):
     Returns:
         tuple: RSS, predicted_y, model, error, statistical_test
     """
+
     model = LinearRegression().fit(x, y)
     predicted_y = model.predict(x)
     error = y - predicted_y
@@ -99,6 +111,7 @@ def linear_regression2(x, y):
     return RSS, predicted_y, model, error, statistical_test
 
 def quadratic_regression(x, y):
+
     """
     Perform quadratic regression using Ordinary Least Squares (OLS).
 
@@ -111,6 +124,9 @@ def quadratic_regression(x, y):
     """
         
     # Fit a quadratic polynomial model (degree = 2)
+    poly = PolynomialFeatures(degree=2)
+    x_poly = poly.fit_transform(x)
+
     coeffs = np.polyfit(x, y, 2)
     model = np.poly1d(coeffs)
 
@@ -148,6 +164,7 @@ def calculate_BIC(RSS, n, k):
     return BIC_value
 
 def anova_f_test(X, residuals):
+
     """
     Performs ANOVA F-test on features X and target y.
 
@@ -159,11 +176,26 @@ def anova_f_test(X, residuals):
         F_statistic (array): F-statistic values for each feature.
         p_values (array): Associated p-values.
     """
+
     F_statistic, p_values = f_classif(X, residuals)
     return F_statistic, p_values
 
 
 def confidence_interval(x, y, model):
+
+    """
+    Calculates the confidence interval for predicted y-values based on a linear regression model.
+
+    Args:
+        x (numpy.ndarray): An array of x-values.
+        y (numpy.ndarray): An array of corresponding y-values.
+        model: A trained linear regression model.
+
+    Returns:
+        tuple: A tuple containing two arrays representing the lower and upper bounds of the confidence interval.
+
+    """
+    
     # Predict y values for given x
     predicted_y = model.predict(x)
     # Calculate the residuals
@@ -179,12 +211,24 @@ def confidence_interval(x, y, model):
 
 def segment(x, y):
 
-    '''
-    Iteratively fit a split line regression on either side of a moving breakpoint. 
-    For each iteration it will calculate BIC using the sum of RSS for both lines. Returns 
-    the segments with the lowest BIC, which should be the optimal fit.
-    
-    '''
+    """
+    Iteratively fits a split line regression on either side of a moving breakpoint.
+    For each iteration, it calculates the Bayesian Information Criterion (BIC) using the sum of
+    residual sum of squares (RSS) for both lines. Returns the segments with the lowest BIC,
+    which should be the optimal fit.
+
+    Args:
+        x (numpy.ndarray): An array of x-values.
+        y (numpy.ndarray): An array of corresponding y-values.
+
+    Returns:
+        tuple: A tuple containing two segments (x1, y1, model1) and (x2, y2, model2), along with the best BIC.
+            - x1, y1: x-values and predicted y-values for the first segment.
+            - model1: Trained linear regression model for the first segment.
+            - x2, y2: x-values and predicted y-values for the second segment.
+            - model2: Trained linear regression model for the second segment.
+            - best_BIC: The lowest BIC value achieved during the search.
+    """
 
     best_BIC = float('inf')
     best_segment_1 = (x, y)  
@@ -207,12 +251,19 @@ def segment(x, y):
 
 def find_overlap_float(x, y):
 
-    '''
-    Checks if the confidence intervals for two regression lines on either side of a 
-    breakpoint overlap. If they do, it prints the range of the overlap. Used to check
-    if the bilinear time-series is continuous or discontinuous.
-    
-    '''
+    """
+    Checks if the confidence intervals for two regression lines on either side of a breakpoint overlap.
+    If they do, it returns the range of the overlap. Used to check if the bilinear time-series is continuous
+    or discontinuous.
+
+    Args:
+        x (tuple): A tuple representing the confidence interval for the first regression line.
+        y (tuple): A tuple representing the confidence interval for the second regression line.
+
+    Returns:
+        tuple or None: A tuple containing the overlap range (start, end) if there's an overlap,
+        otherwise None.
+    """
 
     # Calculate the overlap range
     overlap_start = max(x[0], y[0])
@@ -223,36 +274,24 @@ def find_overlap_float(x, y):
         return (overlap_start, overlap_end)
     else:
         return None
-    
-
-def CompareBIC(x,y):
-
-    '''
-    This function will compare a segmented linear, linear, and quadric model fit to the same time
-    series. The most appropriate fit is determined by the model which has the lowest BIC.
-
-    '''
-    segment1, segment2, lowest_BIC = segment(x, y)
-
-    # Calculate BIC for linear model
-    x, y = reshape(x, y)
-    RSS_linear, predicted_y_linear, _ = linear_regression(x, y)
-    BIC_linear = calculate_BIC(RSS_linear, len(x), 1)  # k = 1 for a linear model
-
-    # Calculate BIC for quadratic model
-    poly = PolynomialFeatures(degree=2)
-    x_poly = poly.fit_transform(x)
-    RSS_quad, predicted_y_quad, _ = linear_regression(x_poly, y)
-    BIC_quad = calculate_BIC(RSS_quad, len(x), 2)  # k = 2 for a quadratic model
-
-    # 1 = linear regression, 2 = quadratic regression, 3 = segmented regression
-    BIC_values = {1: BIC_linear, 2: BIC_quad, 3: lowest_BIC}
-    min_BIC_model = min(BIC_values, key=BIC_values.get)
-
-    return(min_BIC_model)
 
 
 def calculate_weights_and_evidence_ratio(bic_values):
+
+    """
+    Calculates the weights and evidence ratio based on Bayesian Information Criterion (BIC) values.
+
+    Args:
+        bic_values (list): A list of three BIC values corresponding to different regression models.
+
+    Returns:
+        dict: A dictionary containing the following keys:
+            - 'segmented_weight': Weight assigned to the segmented model.
+            - 'linear_weight': Weight assigned to the linear model.
+            - 'quadratic_weight': Weight assigned to the quadratic model.
+            - 'evidence_ratio': Evidence ratio (Bw) comparing the segmented model to the best of linear and quadratic models.
+    """
+
     # Ensure there are exactly three BIC values
     if len(bic_values) != 3:
         raise ValueError("There must be exactly three BIC values.")

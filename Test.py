@@ -13,8 +13,6 @@ BIC_linear = Functions.calculate_BIC(RSS_linear, len(x), 1)  # k = 1 for a linea
 
 # Calculate BIC for quadratic model
 
-poly = Functions.PolynomialFeatures(degree=2)
-x_poly = poly.fit_transform(x)
 RSS_quad, predicted_y_quad, quad_residuals, error_quad, f_quad = Functions.linear_regression2(x_poly, y)
 BIC_quad = Functions.calculate_BIC(RSS_quad, len(x), 2)  # k = 2 for a quadratic model
 
